@@ -205,6 +205,7 @@ nav .sheet a{flex:none;font-size:12px;padding:12px 0}
 <div id="clock" aria-live="off"></div>
 <img id="logo" src="logo.png" alt="LogiRide" onerror="this.style.display='none'">
 <script>
+// Clé et instance Supabase récupérées du Fichier 3
 const sb=supabase.createClient('https://qfqazwodfbsiurdokzqq.supabase.co','sb_publishable_EZeFEeNoL7tJ-ULIYKvtIQ_F6tmOIYh');
 const $=s=>document.querySelector(s);
 const FOOT='<p class="sub" style="font-size:12px;margin:24px 0 0;text-align:center">LogiRide version 0.3 beta &copy;LogiSync</p>';
@@ -258,9 +259,24 @@ async function load(){
  L=r[0].data||[];ST=r[1].data||[];SV=r[2].data||[];MG=r[3].data||[];PR=Object.fromEntries((r[4].data||[]).map(p=>[p.id,p]));VEH=r[5].data||[];
 }
 async function enter(id){
- let{data}=await sb.from('profiles').select('*').eq('id',id).maybeSingle();
- if(!data){await new Promise(r=>setTimeout(r,800));data=(await sb.from('profiles').select('*').eq('id',id).maybeSingle()).data}
- me=data||{id,prenom:'',nom:'',role:'driver'};if(!me.approved){render();return}await load();subscribe();render();
+ // Relit le profil avec quelques tentatives : évite de conserver un rôle/statut obsolète juste après la connexion.
+ let data=null,lastError=null;
+ for(let attempt=0;attempt<3&&!data;attempt++){
+  const result=await sb.from('profiles').select('*').eq('id',id).maybeSingle();
+  data=result.data;lastError=result.error;
+  if(!data&&attempt<2)await new Promise(r=>setTimeout(r,500*(attempt+1)));
+ }
+ if(!data){
+  if(lastError)toast('Impossible de lire ton profil : '+lastError.message);
+  me={id,prenom:'',nom:'',role:'driver',approved:false};render();return;
+ }
+ me=data;
+ if(!me.approved){render();return}
+ await load();
+ // Synchronise le profil connecté avec la liste chargée, si elle est disponible.
+ me=PR[id]||me;
+ if(!me.approved){render();return}
+ subscribe();render();
 }
 function subscribe(){
  if(live)return;live=true;
@@ -578,7 +594,7 @@ function svcDlg(id){
   const n=$('#s1').value.replace(/[^A-Za-z0-9-]/g,'');
   if(!n)return er('Renseigne un numéro de service.');
   if(!$('#s2').value)return er('Crée d’abord une ligne.');
-  const prefix=$('#s2').value.startsWith('NT')?'N':'L';
+  const prefix=$('#s2').value.startsWith('NT')?'NT':'DC';
   const expected=prefix+$('#s2').value+'-';
   if(!id&&!n.startsWith(expected))return er(`Le numéro doit commencer par ${expected}<n°service> (ex. ${expected}1-YYMMDD).`);
   if(!id&&SV.some(x=>x.id===n))return er('Ce numéro existe déjà.');
@@ -614,7 +630,15 @@ function render(){
  if(v!=='drive')$('#app').insertAdjacentHTML('beforeend',FOOT);
  document.querySelectorAll('.sv[data-id],.chip[data-id],.js[data-id]').forEach(e=>{e.onclick=()=>detail(e.dataset.id);e.onkeydown=k=>{if(k.key==='Enter')e.click()}});
  document.querySelectorAll('.tabs button[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
- document.querySelectorAll('#at button').forEach(b=>b.onclick=()=>{adm=b.dataset.a;if(adm==='services')svcPage=0;render()});
+ const adminTabs=$('#at');
+ if(adminTabs)adminTabs.onclick=e=>{
+  const button=e.target.closest('button[data-a]');
+  if(!button)return;
+  e.preventDefault();
+  adm=button.dataset.a;
+  if(adm==='services')svcPage=0;
+  render();
+ };
  document.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{svcPage+=Number(b.dataset.sp);render()});
   const af=$('#autoFleet');if(af)af.onclick=()=>{if(confirm('Recalculer les affectations de véhicules pour tous les services ? Les affectations actuelles seront remplacées.'))autoFleet()};
  document.querySelectorAll('[data-mp]').forEach(b=>b.onclick=()=>{pmo+=+b.dataset.mp;render()});
@@ -646,7 +670,18 @@ function tick(){
 tick();setInterval(tick,1000);
 document.addEventListener('keydown',e=>{if(me&&view().startsWith('drive-')&&e.target===document.body&&(e.key===' '||e.key==='Enter')){e.preventDefault();dvalid()}});
 window.addEventListener('afterprint',()=>document.body.classList.remove('ps'));
-window.addEventListener('hashchange',render);
+let profileSyncToken=0;
+window.addEventListener('hashchange',async()=>{
+ const token=++profileSyncToken;
+ // À chaque navigation, rafraîchit le rôle et l'approbation depuis Supabase.
+ if(me&&me.id){
+  const {data,error}=await sb.from('profiles').select('*').eq('id',me.id).maybeSingle();
+  if(token!==profileSyncToken)return;
+  if(data)me=data;
+  else if(error)console.warn('Synchronisation du profil impossible :',error.message);
+ }
+ if(token===profileSyncToken)render();
+});
 sb.auth.getSession().then(({data})=>data.session?enter(data.session.user.id):render());
 </script>
 </body>
