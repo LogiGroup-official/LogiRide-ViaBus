@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>LogiRide - SAE ViaBus</title>
+<title>LogiRide - Réseau ViaBus</title>
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="apple-touch-icon" href="logo.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
@@ -223,7 +223,7 @@ const lb=c=>{const x=L.find(y=>y.code===c);return `<span class="ln" style="backg
 const veh=n=>VEH.find(v=>v.fleet_number===String(n));
 const vehLabel=n=>{const v=veh(n);return v?`${v.fleet_number} · ${v.model}`:String(n)};
 const vehText=s=>(s.vehicle_numbers||[]).map(vehLabel).join(' + ');
-const isNightLine=c=>String(c).startsWith('');
+const isNightLine=c=>String(c).startsWith('NT');
 const serviceStart=s=>new Date(`${s.day}T${hm(s.start_time)}:00`);
 const serviceEnd=s=>{const d=new Date(`${s.day}T${hm(s.end_time)}:00`);if(d<=serviceStart(s))d.setDate(d.getDate()+1);return d};
 const overlaps=(a,b)=>serviceStart(a)<serviceEnd(b)&&serviceStart(b)<serviceEnd(a);
@@ -430,7 +430,7 @@ function detail(id){location.hash='s-'+id}
 const DEPOT='Dépôt LS',PREP=2,HLP_OUT=3,HLP_IN=5,FIN=0;
 // Temps de trajet par ligne : [durée d'une course (aller ou retour), repos au terminus] en minutes
 const trj=l=>{const T=TRAJ[String(l.code).toUpperCase()]||[10,5];return[Number.isInteger(l.course_min)&&l.course_min>0?l.course_min:T[0],Number.isInteger(l.repos_min)&&l.repos_min>=0?l.repos_min:T[1]]};
-const TRAJ={L1:[12,7],L2:[10,5],L3:[10,5],L4:[3,2],L5:[10,5],L6:[10,5],L8:[10,5],L9:[10,5],TZEN1:[10,5],TZEN2:[10,5],S30:[10,5};
+const TRAJ={A:[10,5],B:[10,5],C:[6,5],D:[8,5],E:[15,5],NT1:[10,5],NT2:[10,5],NT3:[6,5],NT4:[8,5],NT5:[15,5]};
 const ft=m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
 const dm=d=>d<60?d+' min':Math.floor(d/60)+' h '+String(d%60).padStart(2,'0');
 const hh=d=>Math.floor(d/60)+':'+String(d%60).padStart(2,'0');
@@ -594,7 +594,7 @@ function svcDlg(id){
   const n=$('#s1').value.replace(/[^A-Za-z0-9-]/g,'');
   if(!n)return er('Renseigne un numéro de service.');
   if(!$('#s2').value)return er('Crée d’abord une ligne.');
-  const prefix=$('#s2').value.startsWith('')?'':'';
+  const prefix=$('#s2').value.startsWith('NT')?'NT':'DC';
   const expected=prefix+$('#s2').value+'-';
   if(!id&&!n.startsWith(expected))return er(`Le numéro doit commencer par ${expected}<n°service> (ex. ${expected}1-YYMMDD).`);
   if(!id&&SV.some(x=>x.id===n))return er('Ce numéro existe déjà.');
