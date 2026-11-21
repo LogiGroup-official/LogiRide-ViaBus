@@ -427,7 +427,7 @@ function messages(){
 }
 
 function detail(id){location.hash='s-'+id}
-const DEPOT='Dépôt LS',PREP=2,HLP_OUT=3,HLP_IN=5,FIN=0;
+const DEPOT='Dépôt VB',PREP=2,HLP_OUT=3,HLP_IN=5,FIN=0;
 // Temps de trajet par ligne : [durée d'une course (aller ou retour), repos au terminus] en minutes
 const trj=l=>{const T=TRAJ[String(l.code).toUpperCase()]||[10,5];return[Number.isInteger(l.course_min)&&l.course_min>0?l.course_min:T[0],Number.isInteger(l.repos_min)&&l.repos_min>=0?l.repos_min:T[1]]};
 const TRAJ={A:[10,5],B:[10,5],C:[6,5],D:[8,5],E:[15,5],NT1:[10,5],NT2:[10,5],NT3:[6,5],NT4:[8,5],NT5:[15,5]};
@@ -525,7 +525,7 @@ function drive(){
  <div class="dn2"><span style="font-size:36px">🏠</span><div class="g"><small class="mu">${S.prev?esc(S.prev.label)+' à '+ft(S.prev.a)+(S.prev.k==='prep'?' au dépôt':''):'Début de service'}</small><br><b>${done?'Service terminé':esc(bigOf(S.cur))}</b></div><div class="cdv"><b id="dvcd">${done?'':S.txt}</b><small id="dvcdl" class="mu">${done?'':esc(S.lbl)}</small></div></div>
  <button class="big" id="dvgo">${done?'Quitter le mode conduite':esc(btnOf(S.cur))}</button>
  <div class="chips"><span>Service ${esc(s.id)}</span><span>Fin de service ${ft(P.t0+P.tot)}</span></div>
- <div class="dd"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0">Déroulé du service</h2><span class="mu">Espace ou Entrée : valider l’étape</span></div>${P.st.map((x,i)=>`<div class="di ${i<D.n?'done':i===D.n?'now':''}"><div><b>${esc(x.k==='course'?`Course ${x.n} · ${x.from} → ${x.to}`:x.k==='hlp'?`Haut-le-pied · ${x.from} → ${x.to}`:x.label)}</b><small>${x.k==='prep'?'checklist':x.k==='fin'?'Remisage du véhicule':x.k==='batt'?'au terminus':x.k==='course'?(x.sens==='A'?'aller':'retour'):'trajet à vide'}</small></div><span class="t">${i<D.n?'✓ ':''}${x.k==='prep'||x.k==='fin'?ft(x.a):ft(x.a)+' → '+ft(x.b)}</span></div>`).join('')}</div>`;
+ <div class="dd"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0">Déroulé du service</h2><span class="mu">Espace ou Entrée : valider l’étape</span></div>${P.st.map((x,i)=>`<div class="di ${i<D.n?'done':i===D.n?'now':''}"><div><b>${esc(x.k==='course'?`Course ${x.n} · ${x.from} → ${x.to}`:x.k==='hlp'?`Haut-le-pied · ${x.from} → ${x.to}`:x.label)}</b><small>${x.k==='prep'?'Préparation du Véhicule':x.k==='fin'?'Remisage du véhicule':x.k==='batt'?'au terminus':x.k==='course'?(x.sens==='A'?'aller':'retour'):'trajet à vide'}</small></div><span class="t">${i<D.n?'✓ ':''}${x.k==='prep'||x.k==='fin'?ft(x.a):ft(x.a)+' → '+ft(x.b)}</span></div>`).join('')}</div>`;
  return `<div class="dv"><div class="dr"><button class="rb on" title="Conduite">➤</button><a class="rb" href="#messages" title="Messages">✉</a><button class="rb" id="dvreset" title="Recommencer le déroulé">↺</button><button class="rb x" id="dvquit" title="Quitter" style="margin-top:auto">✕</button></div><div class="dl" data-idx="${S.idx}">${left}</div><div class="dm">${right}</div></div>`;
 }
 function dvalid(){
