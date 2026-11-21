@@ -373,7 +373,7 @@ const nuit=s=>{const a=tmin(s.start_time),b=a+dur(s),ov=(x,y)=>Math.max(0,Math.m
 function heures(){
  const d=mstart(hmo),y=d.getFullYear(),m=d.getMonth(),now=new Date(),inM=myM(hmo),my=SV.filter(s=>s.driver_id===me.id);
  const sum=a=>a.reduce((t,s)=>t+dur(s),0),tot=sum(inM),done=sum(inM.filter(s=>endOf(s)<=now));
- const form=sum(inM.filter(s=>/formation/i.test(s.detail||''))),nt=inM.reduce((t,s)=>t+nuit(s),0);
+ const form=sum(inM.filter(s=>(/^FORMATC(12|18|25)$/i.test(s.line_code)||/formation/i.test(s.detail||'')))),nt=inM.reduce((t,s)=>t+nuit(s),0);
  const fs=inM.filter(s=>isDim(s.day)||isFerie(s.day)),fj=new Set(fs.map(s=>s.day)).size;
  const days=[...new Set(inM.map(s=>s.day))];
  const f0=new Date(y,m,1);f0.setDate(1-((f0.getDay()+6)%7));
