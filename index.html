@@ -646,7 +646,7 @@ function svcDlg(id){
   const n=$('#s1').value.replace(/[^A-Za-z0-9-]/g,'');
   if(!n)return er('Renseigne un numéro de service.');
   if(!$('#s2').value)return er('Crée d’abord une ligne.');
-  const prefix=$('#s2').value.startsWith('NT')?'NT':'DC';
+  const prefix=$('#s2').value.startsWith('NT')?'':'';
   const expected=prefix+$('#s2').value+'-';
   if(!id&&!n.startsWith(expected))return er(`Le numéro doit commencer par ${expected}<n°service> (ex. ${expected}1-YYMMDD).`);
   if(!id&&SV.some(x=>x.id===n))return er('Ce numéro existe déjà.');
